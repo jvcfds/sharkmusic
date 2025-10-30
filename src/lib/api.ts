@@ -1,63 +1,47 @@
-import type { Artist, Track } from './types'
+const proxy = 'https://api.allorigins.win/raw?url='
+const baseUrl = 'https://api.deezer.com'
 
-async function getJSON<T>(url: string): Promise<T> {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`HTTP ${res.status} - ${url}`)
+// Função auxiliar pra garantir fetch limpo e tratável
+async function fetchDeezer(endpoint: string) {
+  const res = await fetch(`${proxy}${baseUrl}${endpoint}`)
+  if (!res.ok) {
+    console.error('Erro ao buscar dados do Deezer:', res.status, res.statusText)
+    throw new Error('Erro na API do Deezer')
+  }
   return res.json()
 }
 
-// Busca artistas por nome
-export async function searchArtists(q: string): Promise<Artist[]> {
-  if (!q) return []
-  const data = await getJSON<{ data: any[] }>(`/api/search/artist?q=${encodeURIComponent(q)}`)
-  return data.data?.map(mapArtist) ?? []
+// 🔹 Artistas em alta (usado na Home)
+export async function getTopArtists() {
+  return fetchDeezer('/chart/0/artists')
 }
 
-// Detalhe do artista
-export async function getArtist(id: string | number): Promise<Artist> {
-  const a = await getJSON<any>(`/api/artist/${id}`)
-  return mapArtist(a)
+// 🔹 Músicas em alta (usado na Home)
+export async function getTopTracks() {
+  return fetchDeezer('/chart/0/tracks')
 }
 
-// Top músicas do artista
-export async function getArtistTopTracks(id: string | number): Promise<Track[]> {
-  const data = await getJSON<{ data: any[] }>(`/api/artist/${id}/top?limit=12`)
-  return data.data?.map(mapTrack) ?? []
+// 🔹 Detalhes de um artista
+export async function getArtist(id: string) {
+  return fetchDeezer(`/artist/${id}`)
 }
 
-// Detalhe da música
-export async function getTrack(id: string | number): Promise<Track> {
-  const t = await getJSON<any>(`/api/track/${id}`)
-  return mapTrack(t)
+// 🔹 Álbuns de um artista
+export async function getArtistAlbums(id: string) {
+  return fetchDeezer(`/artist/${id}/albums`)
 }
 
-function mapArtist(a: any): Artist {
-  return {
-    id: a.id,
-    name: a.name,
-    picture: a.picture,
-    picture_medium: a.picture_medium ?? a.picture,
-    picture_big: a.picture_big ?? a.picture,
-  }
+// 🔹 Faixas de um álbum
+export async function getAlbumTracks(id: string) {
+  return fetchDeezer(`/album/${id}/tracks`)
 }
 
-function mapTrack(t: any): Track {
-  return {
-    id: t.id,
-    title: t.title,
-    preview: t.preview,
-    duration: t.duration,
-    artist: {
-      id: t.artist?.id,
-      name: t.artist?.name,
-      picture: t.artist?.picture,
-    },
-    album: t.album
-      ? {
-          cover: t.album.cover,
-          cover_medium: t.album.cover_medium ?? t.album.cover,
-          cover_big: t.album.cover_big ?? t.album.cover,
-        }
-      : undefined,
-  }
+// 🔹 Detalhes de uma música específica
+export async function getTrack(id: string) {
+  return fetchDeezer(`/track/${id}`)
+}
+
+// 🔹 Buscar artistas ou faixas
+export async function searchAll(query: string) {
+  return fetchDeezer(`/search?q=${encodeURIComponent(query)}`)
 }
