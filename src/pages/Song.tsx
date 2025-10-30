@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getTrack } from '../lib/api'
+import { useTheme } from '../lib/theme'
+import { usePlayer } from '../lib/player'
 import type { Track } from '../lib/types'
 import { motion } from 'framer-motion'
-import { useTheme } from '../lib/theme'
-import { usePlayer } from '../lib/playerContext'
 
-export default function Song() {
+export default function SongPage() {
   const { id } = useParams()
   const [track, setTrack] = useState<Track | null>(null)
   const { setTheme } = useTheme()
@@ -14,47 +14,93 @@ export default function Song() {
 
   useEffect(() => {
     if (!id) return
-    getTrack(id).then((t) => {
-      setTrack(t)
-      const cover = t.album?.cover_big ?? t.artist.picture
-      setTheme({
-        bgImage: cover || null,
-        tint: 'radial-gradient(900px 500px at 70% 20%, rgba(0,191,255,.35), rgba(8,16,24,.9))'
-      })
-    })
+
+    const load = async () => {
+      try {
+        const data = await getTrack(id)
+        setTrack(data)
+
+        // define o fundo com fallback seguro
+        const cover =
+          (data.album as any)?.cover_xl ||
+          (data.album as any)?.cover_big ||
+          (data.album as any)?.cover_medium ||
+          (data.album as any)?.cover ||
+          '/shark-album.png'
+
+        setTheme({ bgImage: cover })
+      } catch (err) {
+        console.error('Erro ao carregar música:', err)
+      }
+    }
+
+    load()
   }, [id, setTheme])
 
-  if (!track) return <p className="opacity-70">Carregando música…</p>
+  if (!track)
+    return (
+      <div className="flex items-center justify-center h-[70vh] text-white/70 text-lg">
+        Carregando música...
+      </div>
+    )
 
-  const cover = track.album?.cover_big ?? track.artist.picture
+  const albumCover =
+    (track.album as any)?.cover_xl ||
+    (track.album as any)?.cover_big ||
+    (track.album as any)?.cover_medium ||
+    (track.album as any)?.cover ||
+    '/shark-album.png'
 
   return (
-    <div className="grid md:grid-cols-[320px_1fr] gap-8 items-start">
+    <motion.div
+      className="flex flex-col items-center text-center space-y-8 mt-10 pb-20"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      {/* Capa */}
       <motion.img
-        src={cover}
+        src={albumCover}
         alt={track.title}
-        className="w-full max-w-[320px] rounded-2xl shadow-[0_0_40px_rgba(0,191,255,0.25)]"
+        className="w-64 h-64 rounded-2xl shadow-xl object-cover"
+        whileHover={{ scale: 1.03 }}
+        transition={{ type: 'spring', stiffness: 250, damping: 20 }}
       />
-      <div className="space-y-5">
-        <h1 className="text-4xl font-extrabold text-shark-300">{track.title}</h1>
-        <p className="text-shark-200">{track.artist.name}</p>
 
-        {track.preview ? (
-          <button
-            onClick={() => playTrack(track)}
-            className="rounded-lg bg-shark-500/20 hover:bg-shark-500/40 text-shark-100 font-medium px-6 py-2 transition shadow-md"
-          >
-            ▶️ Ouvir preview (30s)
-          </button>
-        ) : (
-          <span className="opacity-70 text-sm">🎵 Sem preview disponível</span>
-        )}
-
-        <div className="opacity-70 text-sm">
-          <p>ID: {track.id}</p>
-          <p>Duração: {Math.round(track.duration / 60)} min</p>
-        </div>
+      {/* Informações */}
+      <div>
+        <h1 className="text-4xl font-bold mb-2">{track.title}</h1>
+        <p className="opacity-80">{track.artist.name}</p>
       </div>
-    </div>
+
+      {/* Botão Play */}
+      <motion.button
+        onClick={() => playTrack(track)}
+        whileTap={{ scale: 0.95 }}
+        className="px-6 py-3 bg-shark-500/40 hover:bg-shark-500/70 rounded-full text-white font-semibold transition"
+      >
+        ▶ Tocar Prévia
+      </motion.button>
+
+      {/* Álbum */}
+      <div className="opacity-70 text-sm">
+        Álbum:{' '}
+        <span className="font-medium">
+          {(track.album as any)?.title || 'Desconhecido'}
+        </span>
+      </div>
+
+      {/* Link Deezer */}
+      {(track as any)?.link && (
+        <a
+          href={(track as any).link}
+          target="_blank"
+          rel="noreferrer"
+          className="text-shark-300 hover:text-shark-200 underline transition"
+        >
+          Ouvir no Deezer →
+        </a>
+      )}
+    </motion.div>
   )
 }
