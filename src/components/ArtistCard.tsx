@@ -1,56 +1,32 @@
-import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import type { Artist } from '../lib/types'
-import { useState } from 'react'
 
 export default function ArtistCard({ artist }: { artist: Artist }) {
-  const fallback = '/shark-album.png'
-  const [loaded, setLoaded] = useState(false)
-
-  // imagem preferida
-  const imageUrl = artist.picture_medium || fallback
+  const cover = artist.picture_medium || artist.picture || '/shark-album.png'
 
   return (
-    <Link to={`/artist/${artist.id}`} className="block">
-      <motion.div
-        layoutId={`artist-card-${artist.id}`}
-        className="bg-[#0b1624]/60 rounded-xl p-3 hover:bg-[#0b1624]/90 transition shadow-md hover:shadow-lg hover:shadow-shark-500/10"
-      >
-        <div className="relative overflow-hidden rounded-lg">
-          {/* fallback padrão Shark — aparece até a imagem real carregar */}
-          {!loaded && (
-            <img
-              src={fallback}
-              alt="shark-fallback"
-              className="w-full aspect-square object-cover rounded-lg absolute inset-0 blur-[1px] opacity-90"
-            />
-          )}
-
-          {/* imagem real */}
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="bg-white/5 rounded-xl overflow-hidden hover:bg-white/10 backdrop-blur-sm cursor-pointer group"
+    >
+      <Link to={`/artist/${artist.id}`} className="block">
+        <div className="relative w-full aspect-square overflow-hidden">
           <motion.img
-            layoutId={`artist-cover-${artist.id}`}
-            src={imageUrl}
+            src={cover}
             alt={artist.name}
-            onLoad={() => setLoaded(true)}
-            onError={(e) => {
-              e.currentTarget.onerror = null
-              e.currentTarget.src = fallback
-            }}
-            className={`w-full aspect-square object-cover rounded-lg transition-transform duration-300 hover:scale-105 ${
-              !loaded ? 'opacity-0' : 'opacity-100'
-            }`}
+            loading="lazy"
+            className="object-cover w-full h-full group-hover:opacity-90 transition-opacity duration-300"
           />
-
-          {/* overlay azul suave */}
-          {loaded && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          )}
         </div>
 
-        <div className="mt-2 font-medium text-center truncate text-shark-100">
-          {artist.name}
+        <div className="p-3 text-center">
+          <h3 className="text-base font-semibold truncate group-hover:text-shark-300 transition-colors">
+            {artist.name}
+          </h3>
         </div>
-      </motion.div>
-    </Link>
+      </Link>
+    </motion.div>
   )
 }

@@ -1,62 +1,53 @@
-import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Track } from '../lib/types'
+import { usePlayer } from '../lib/player'
 
 export default function SongCard({ track }: { track: Track }) {
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const [playing, setPlaying] = useState(false)
-
+  const { playTrack } = usePlayer()
   const cover =
-    track.album?.cover_medium ?? track.artist.picture ?? '/shark-album.png'
+    track.album?.cover_medium || track.album?.cover || '/shark-album.png'
 
   return (
-    <div className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition">
-      <Link
-        to={`/song/${track.id}`}
-        state={{ track }} // envia a música para o Player
-        className="block"
+    <motion.div
+      whileHover={{ scale: 1.04 }}
+      transition={{ type: 'spring', stiffness: 250, damping: 18 }}
+      className="bg-white/5 rounded-xl overflow-hidden hover:bg-white/10 backdrop-blur-sm group cursor-pointer flex flex-col"
+    >
+      <div
+        onClick={() => playTrack(track)}
+        className="relative w-full aspect-square overflow-hidden"
       >
         <motion.img
-          layoutId={`song-cover-${track.id}`}
           src={cover}
           alt={track.title}
-          className="w-full aspect-square object-cover rounded-lg transition-transform duration-300 hover:scale-105"
+          loading="lazy"
+          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
         />
-      </Link>
 
-      <div className="mt-2">
-        <div className="font-semibold leading-tight truncate">{track.title}</div>
-        <Link
-          to={`/artist/${track.artist.id}`}
-          className="text-sm opacity-70 hover:opacity-100 truncate"
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          className="absolute inset-0 flex items-center justify-center bg-black/50"
         >
-          {track.artist.name}
-        </Link>
+          <button
+            onClick={() => playTrack(track)}
+            className="p-3 rounded-full bg-shark-500/60 hover:bg-shark-500/80 transition"
+          >
+            ▶
+          </button>
+        </motion.div>
       </div>
 
-      {track.preview && (
-        <div className="mt-3 flex items-center gap-2">
-          <audio ref={audioRef} src={track.preview} />
-          <button
-            className="text-xs px-2 py-1 rounded bg-shark-500/20 hover:bg-shark-500/40 transition"
-            onClick={() => {
-              const a = audioRef.current
-              if (!a) return
-              if (playing) {
-                a.pause()
-                setPlaying(false)
-              } else {
-                a.play()
-                setPlaying(true)
-                a.onended = () => setPlaying(false)
-              }
-            }}
-          >
-            {playing ? '⏸ Pausar' : '▶️ Preview (30s)'}
-          </button>
-        </div>
-      )}
-    </div>
+      <div className="p-3 flex flex-col items-center justify-center text-center space-y-1">
+        <Link
+          to={`/song/${track.id}`}
+          className="text-sm font-semibold hover:text-shark-300 transition-colors truncate max-w-[90%]"
+        >
+          {track.title}
+        </Link>
+        <p className="text-xs opacity-70 truncate">{track.artist.name}</p>
+      </div>
+    </motion.div>
   )
 }

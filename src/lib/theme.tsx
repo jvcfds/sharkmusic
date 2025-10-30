@@ -1,80 +1,52 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import ColorThief from 'color-thief-browser'
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ThemeContextType {
   bgImage: string | null
-  tint: string
-  setTheme: (theme: { bgImage: string | null; tint?: string }) => void
+  setTheme: (theme: { bgImage?: string | null }) => void
   clearTheme: () => void
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const ThemeContext = createContext<ThemeContextType>({
+  bgImage: null,
+  setTheme: () => {},
+  clearTheme: () => {},
+})
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [bgImage, setBgImage] = useState<string | null>(null)
-  const [tint, setTint] = useState(
-    'linear-gradient(120deg, rgba(0,123,255,.25), rgba(8,16,24,.8))'
-  )
 
-  useEffect(() => {
-    if (!bgImage) return
+  const setTheme = (theme: { bgImage?: string | null }) => {
+    if (theme.bgImage) setBgImage(theme.bgImage)
+  }
 
-    const img = new Image()
-    img.crossOrigin = 'Anonymous'
-    img.src = bgImage
-
-    img.onload = () => {
-      try {
-        const colorThief = new ColorThief()
-        const result = colorThief.getColor(img)
-        const [r, g, b] = result
-        setTint(
-          `linear-gradient(160deg, rgba(${r},${g},${b},0.4), rgba(8,16,24,.9))`
-        )
-      } catch {
-        setTint(
-          'linear-gradient(120deg, rgba(0,123,255,.25), rgba(8,16,24,.8))'
-        )
-      }
-    }
-  }, [bgImage])
+  const clearTheme = () => setBgImage(null)
 
   return (
-    <ThemeContext.Provider
-      value={{
-        bgImage,
-        tint,
-        setTheme: ({ bgImage, tint }) => {
-          if (bgImage) setBgImage(bgImage)
-          if (tint) setTint(tint)
-        },
-        clearTheme: () => {
-          setBgImage(null)
-          setTint(
-            'linear-gradient(120deg, rgba(0,123,255,.25), rgba(8,16,24,.8))'
-          )
-        },
-      }}
-    >
-      {/* fundo dinâmico com fade suave */}
-      <div
-        key={bgImage || 'default'}
-        className="fixed inset-0 -z-10 transition-all duration-1000 ease-in-out"
-        style={{
-          backgroundImage: `${tint}${bgImage ? `, url(${bgImage})` : ''}`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(40px) brightness(0.8)',
-          opacity: 1,
-        }}
-      />
-      {children}
+    <ThemeContext.Provider value={{ bgImage, setTheme, clearTheme }}>
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#030818] to-[#0a1a3a] text-white transition-all duration-1000">
+        <AnimatePresence mode="wait">
+          {bgImage && (
+            <motion.div
+              key={bgImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.25 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+              className="fixed inset-0 z-0"
+              style={{
+                backgroundImage: `url(${bgImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(80px) saturate(120%) brightness(40%)',
+              }}
+            />
+          )}
+        </AnimatePresence>
+        <div className="relative z-10 backdrop-blur-[2px]">{children}</div>
+      </div>
     </ThemeContext.Provider>
   )
 }
 
-export const useTheme = () => {
-  const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error('useTheme must be used within a ThemeProvider')
-  return ctx
-}
+export const useTheme = () => useContext(ThemeContext)
