@@ -13,11 +13,11 @@ export default function RootLayout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#020617] via-[#0B1222] to-[#04070f] text-white overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#020617] via-[#0B1222] to-[#04070f] text-white">
       {/* HEADER FIXO */}
       <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 backdrop-blur-md bg-black/20 border-b border-white/10">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="logo" className="w-8 h-8" />
+          {/* 🔹 Removido o símbolo/ícone da logo */}
           <span className="text-xl font-bold text-sky-400">SharkMusic</span>
         </Link>
 
@@ -38,7 +38,7 @@ export default function RootLayout() {
         </form>
       </header>
 
-      {/* CONTEÚDO PRINCIPAL COM TAMANHO CONTROLADO */}
+      {/* CONTEÚDO CENTRAL */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -50,10 +50,12 @@ export default function RootLayout() {
         </motion.div>
       </main>
 
-      {/* PLAYER FIXO GLOBAL */}
-      <div className="sticky bottom-0 z-40 backdrop-blur-md bg-black/40 border-t border-white/10">
-        <Player />
-      </div>
+      {/* PLAYER FIXO (CORRIGIDO) */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md bg-black/40 border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4">
+          <Player />
+        </div>
+      </footer>
     </div>
   )
 }
