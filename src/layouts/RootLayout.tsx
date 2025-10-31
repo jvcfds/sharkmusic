@@ -1,37 +1,59 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import Player from '../components/Player'
 
 export default function RootLayout() {
+  const [query, setQuery] = useState('')
   const navigate = useNavigate()
 
-  return (
-    <div className="min-h-full relative">
-      <header className="border-b border-white/10 sticky top-0 backdrop-blur-md bg-[#081018]/70 z-50 shadow-lg">
-        <nav className="container py-4 flex items-center justify-between">
-          {/* 🦈 título clicável volta pra home */}
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-shark-400 hover:text-shark-300 transition font-bold text-2xl"
-          >
-            🦈 SharkMusic
-          </button>
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (query.trim()) navigate(`/search?q=${query}`)
+  }
 
-          <div className="flex gap-6 text-sm">
-            <NavLink
-              to="/search"
-              className="opacity-80 hover:opacity-100 transition"
-            >
-              Buscar
-            </NavLink>
-          </div>
-        </nav>
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#020617] via-[#0B1222] to-[#04070f] text-white overflow-hidden">
+      {/* HEADER FIXO */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 backdrop-blur-md bg-black/20 border-b border-white/10">
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="logo" className="w-8 h-8" />
+          <span className="text-xl font-bold text-sky-400">SharkMusic</span>
+        </Link>
+
+        <form onSubmit={handleSearch} className="relative w-[280px] sm:w-[350px]">
+          <input
+            type="text"
+            placeholder="Buscar artista, música..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full rounded-full bg-white/10 text-sm py-2 pl-4 pr-10 placeholder-white/50 outline-none focus:bg-white/15 transition"
+          />
+          <button
+            type="submit"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition"
+          >
+            🔍
+          </button>
+        </form>
       </header>
 
-      <main className="pb-24"> {/* espaço pro player fixo */}
-        <Outlet />
+      {/* CONTEÚDO PRINCIPAL COM TAMANHO CONTROLADO */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Outlet />
+        </motion.div>
       </main>
 
-      <Player />
+      {/* PLAYER FIXO GLOBAL */}
+      <div className="sticky bottom-0 z-40 backdrop-blur-md bg-black/40 border-t border-white/10">
+        <Player />
+      </div>
     </div>
   )
 }
