@@ -1,67 +1,61 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { usePlayer } from '../lib/playerContext'
+import { usePlayer } from '../lib/player'
+import { motion } from 'framer-motion'
+import { Play, Pause } from 'lucide-react'
 
 export default function Player() {
-  const { currentTrack, isPlaying, progress, duration, togglePlay, seek } = usePlayer()
+  const { currentTrack, isPlaying, togglePlay, progress, duration } = usePlayer()
+
   if (!currentTrack) return null
 
-  // garante imagem de capa válida
   const cover =
     currentTrack.album?.cover_medium ||
-    currentTrack.album?.cover ||
+    currentTrack.album?.cover_big ||
     '/shark-album.png'
 
+  const percent = duration ? (progress / duration) * 100 : 0
+
   return (
-    <AnimatePresence>
-      <motion.div
-        key={currentTrack.id}
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="fixed bottom-0 left-0 right-0 backdrop-blur-md bg-[#0b1624]/70 border-t border-white/10 shadow-lg z-50"
-      >
-        <div className="container flex items-center justify-between gap-4 py-3 px-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={cover}
-              alt={currentTrack.title}
-              className="w-12 h-12 rounded-lg object-cover"
-            />
-            <div>
-              <div className="font-semibold text-shark-100 truncate max-w-[200px]">
-                {currentTrack.title}
-              </div>
-              <div className="text-sm text-shark-300 truncate max-w-[200px]">
-                {currentTrack.artist.name}
-              </div>
-            </div>
-          </div>
-
-          {/* Linha de tempo */}
-          <div className="flex-1 mx-6 flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={duration || 30}
-              value={progress}
-              onChange={(e) => seek(parseFloat(e.target.value))}
-              className="w-full accent-shark-400 cursor-pointer"
-            />
-            <span className="text-xs text-shark-300 w-10 text-right">
-              {Math.floor(progress)}s
-            </span>
-          </div>
-
-          {/* Botão play/pause */}
-          <button
-            onClick={togglePlay}
-            className="bg-shark-500/30 hover:bg-shark-500/60 transition rounded-full px-4 py-2 text-white font-semibold shadow-[0_0_15px_rgba(0,191,255,0.2)]"
-          >
-            {isPlaying ? '⏸' : '▶️'}
-          </button>
+    <motion.div
+      className="player-bar flex items-center justify-between gap-4 border-t border-white/10"
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      exit={{ y: 100 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Capa do álbum */}
+      <div className="flex items-center gap-4 w-[200px]">
+        <img
+          src={cover}
+          alt={currentTrack.title}
+          className="w-12 h-12 rounded-lg object-cover shadow-glow"
+        />
+        <div className="truncate">
+          <p className="font-semibold text-sm truncate">{currentTrack.title}</p>
+          <p className="text-xs opacity-70 truncate">{currentTrack.artist.name}</p>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+
+      {/* Controles */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={togglePlay}
+          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
+        >
+          {isPlaying ? (
+            <Pause size={20} className="text-white" />
+          ) : (
+            <Play size={20} className="text-white ml-1" />
+          )}
+        </button>
+      </div>
+
+      {/* Barra de progresso */}
+      <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden max-w-[300px] mx-auto">
+        <div
+          className="progress-bar"
+          style={{ width: `${percent}%` }}
+        ></div>
+      </div>
+    </motion.div>
   )
 }

@@ -7,7 +7,7 @@ import App from './App'
 import { ThemeProvider } from './lib/theme'
 import { PlayerProvider } from './lib/player'
 
-// 🔹 Estilos globais
+// 🔹 Estilos globais e fontes
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/700.css'
 import './index.css'
