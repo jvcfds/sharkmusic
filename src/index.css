@@ -2,10 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+/* 🌈 Gradiente de texto moderno */
+.text-gradient {
+  background-image: linear-gradient(to right, #38bdf8, #818cf8, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-html, body, #root { height: 100%; }
-
+/* 🪶 Fonte e tipografia global */
 body {
-  @apply text-white antialiased bg-gradient-to-b from-[#0b1624] to-[#01060b];
+  @apply bg-[#030818] text-white antialiased;
+  font-family: 'Inter', 'Poppins', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+  scroll-behavior: smooth;
+}
+
+/* 🧱 Cabeçalhos */
+h1, h2, h3, h4, h5 {
+  @apply font-bold text-white;
+}
+
+/* ✨ Links e botões */
+a {
+  @apply text-sky-400 transition-colors duration-300;
+}
+
+a:hover {
+  @apply text-sky-300;
+}
+
+button {
+  @apply transition-all duration-300;
+}
+
+button:hover {
+  @apply scale-[1.03];
+}
+
+/* 💫 Efeito sutil em imagens */
+img {
+  @apply transition-transform duration-500 ease-out;
+}
+
+img:hover {
+  @apply scale-[1.02];
+}
+
+/* 🎵 Fundo animado sutil (para seções principais) */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-animated {
+  background: linear-gradient(270deg, #0f172a, #1e293b, #0a0f24);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}
+
+/* 💡 Sombra suave padrão */
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+/* 🦈 Player fixo (base) */
+.player-bar {
+  @apply fixed bottom-0 left-0 right-0 bg-[#030818]/80 backdrop-blur-xl border-t border-white/10 flex items-center justify-between p-4 z-50;
+}
+
+/* 🔘 Barra de progresso personalizada */
+.progress-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #a855f7);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+/* 📱 Ajustes responsivos */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
 }
