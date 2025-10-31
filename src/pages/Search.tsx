@@ -1,69 +1,132 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 import { searchAll } from '../lib/api'
-import ArtistCard from '../components/ArtistCard'
+import type { Artist, Track, Album } from '../lib/types'
+import { motion } from 'framer-motion'
 import SongCard from '../components/SongCard'
-import type { Artist, Track } from '../lib/types'
+import ArtistCard from '../components/ArtistCard'
 
 export default function Search() {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<{ artists: Artist[]; tracks: Track[] }>({
-    artists: [],
-    tracks: [],
-  })
+  const [searchParams] = useSearchParams()
+  const query = searchParams.get('q') || ''
+  const [artists, setArtists] = useState<Artist[]>([])
+  const [tracks, setTracks] = useState<Track[]>([])
+  const [albums, setAlbums] = useState<Album[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim()) return
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!query.trim()) return
+      setLoading(true)
 
-    const res = await searchAll(query)
-    const artists = res.data.map((r: any) => r.artist)
-    const unique = artists.filter(
-      (a: Artist, i: number, arr: Artist[]) =>
-        arr.findIndex((x) => x.id === a.id) === i
+      try {
+        const results = await searchAll(query, 80)
+
+        const foundTracks: Track[] = results.filter((r: any) => r.type === 'track')
+        const foundArtists: Artist[] = results
+          .filter((r: any) => r.type === 'artist')
+          .slice(0, 12)
+        const foundAlbums: Album[] = results
+          .filter((r: any) => r.type === 'album')
+          .slice(0, 8)
+
+        setTracks(foundTracks)
+        setArtists(foundArtists)
+        setAlbums(foundAlbums)
+      } catch (err) {
+        console.error('Erro ao buscar:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [query])
+
+  if (!query.trim())
+    return (
+      <div className="text-center text-white/70 mt-20">
+        <p>Digite algo para buscar músicas, artistas ou álbuns 🎧</p>
+      </div>
     )
 
-    setResults({
-      artists: unique.slice(0, 6),
-      tracks: res.data.slice(0, 8),
-    })
-  }
-
   return (
-    <div className="space-y-10">
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Buscar artistas ou músicas..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 focus:outline-none"
-        />
-        <button className="bg-shark-500/30 hover:bg-shark-500/60 transition px-5 py-2 rounded-lg font-semibold">
-          Buscar
-        </button>
-      </form>
+    <motion.div
+      className="flex flex-col gap-10"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <h1 className="text-2xl font-bold text-sky-400">
+        Resultados para “{query}”
+      </h1>
 
-      {results.artists.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-bold mb-3">Artistas</h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {results.artists.map((artist) => (
-              <ArtistCard key={artist.id} artist={artist} />
-            ))}
-          </div>
-        </section>
+      {loading && (
+        <p className="text-center text-white/70">Buscando resultados...</p>
       )}
 
-      {results.tracks.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-bold mb-3">Músicas</h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {results.tracks.map((track) => (
-              <SongCard key={track.id} track={track} />
-            ))}
-          </div>
-        </section>
+      {!loading && (
+        <>
+          {artists.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Artistas</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {artists.map((a) => (
+                  <ArtistCard key={a.id} artist={a} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {albums.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Álbuns</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {albums.map((a) => (
+                  <Link
+                    key={a.id}
+                    to={`/song/${a.id}`}
+                    className="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition"
+                  >
+                    <img
+                      src={
+                        a.cover_medium ||
+                        a.cover_big ||
+                        '/shark-album.png'
+                      }
+                      alt={a.title}
+                      className="w-full rounded-md mb-2"
+                    />
+                    <p className="text-sm font-medium truncate">{a.title}</p>
+                    <p className="text-xs opacity-60 truncate">
+                      {a.artist?.name}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {tracks.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Músicas</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tracks.map((t) => (
+                  <SongCard key={t.id} track={t} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {artists.length === 0 &&
+            albums.length === 0 &&
+            tracks.length === 0 && (
+              <p className="text-center text-white/70 mt-10">
+                Nenhum resultado encontrado 😔
+              </p>
+            )}
+        </>
       )}
-    </div>
+    </motion.div>
   )
 }

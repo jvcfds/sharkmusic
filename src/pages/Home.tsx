@@ -17,8 +17,8 @@ export default function Home() {
           getTopTracks(),
         ])
 
-        setArtists(artistData.data || [])
-        setTracks(trackData.data || [])
+        setArtists(artistData)
+        setTracks(trackData)
       } catch (err) {
         console.error('Erro ao carregar dados:', err)
       } finally {
